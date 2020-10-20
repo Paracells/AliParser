@@ -1,10 +1,13 @@
 package ru.paracells;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+
 import java.io.*;
-import java.net.*;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -20,8 +23,6 @@ import java.util.regex.Pattern;
 
 public class Main {
 
-    private static final HttpClient httpClient = HttpClient.newBuilder()
-            .build();
 
     public static final int NUMBER_OF_PROPERTIES = 23; // кол-во свойств, которое будем хранить в массиве для будущего сохранения в list
     private static final int OFFSET = 10; // кол-во элементов с одной "страницы"
@@ -31,7 +32,6 @@ public class Main {
     // забавно: параметр limit можно поставить любой, НО, максимум будет 25 (даже, если мы поставим 30, 50, 100, однако, в любом случае, почему-то ответ
     // на запрос в некоторых полях бывает пустой
 
-    private static HttpRequest request;
 
     private static String productRegExp =
             "(\"productId\":\\d*)|" +
@@ -97,15 +97,26 @@ public class Main {
     }
 
     // https://gpsfront.aliexpress.com/getRecommendingResults.do?callback=jQuery18306968468728800121_1603095262887&widget_id=5547572&platform=pc&limit=12&offset=24&phase=1&productIds2Top=&postback=f456d1dd-87f7-4c5f-953a-eb46e9171152&_=1603113838198
-    private static String sendRequest(int offset) throws IOException, InterruptedException {
-        request = HttpRequest.newBuilder()
-                .GET()
-                .uri(URI.create("https://gpsfront.aliexpress.com/getRecommendingResults.do?callback=jQuery18306968468728800121_1603095262887&widget_id=5547572&platform=pc&limit=10&offset=" + offset * OFFSET + "&phase=1&productIds2Top=&postback=b632efc1-282d-4b33-8fad-659ab9bf19b8&_=1603094458486"))
-                .build();
-        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    private static String sendRequest(int offset) {
+        HttpGet request = new HttpGet("https://gpsfront.aliexpress.com/getRecommendingResults.do?callback=jQuery18306968468728800121_1603095262887&widget_id=5547572&platform=pc&limit=10&offset=" + offset * OFFSET + "&phase=1&productIds2Top=&postback=b632efc1-282d-4b33-8fad-659ab9bf19b8&_=1603094458486");
+        try (
+                CloseableHttpClient httpClient = HttpClients.createDefault();
+                CloseableHttpResponse response = httpClient.execute(request);
+        ) {
+            if (response.getStatusLine().getStatusCode() != 200) {
+                throw new IOException("Код ответа не 200, ошибка загрузки в странице");
+            }
+            HttpEntity entity = response.getEntity();
+            if (entity != null) {
+                System.out.println("Downloading and Parsing " + (offset * OFFSET) + " from 100" + " files");
+                return EntityUtils.toString(entity);
 
-        System.out.println("Downloading and Parsing " + (offset * OFFSET) + " from 100" + " files");
-        return response.body();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Ошибка в странице");
+        return " ";
     }
 
     // список преобразуем в CSV и пишем в файл
@@ -120,6 +131,7 @@ public class Main {
         }
         System.out.println("Complete");
     }
+
     private static String[] createHeaderOfCSV() {
         return new String[]{
                 "productId",
