@@ -4,14 +4,13 @@
 
 ---
 
-**IMPORTANT** Need Java 11 for [HttpClient](https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpClient.html)
 
-_Configuration_
+
+_Configuration in `Properties.java`_
 
 ```java
-public static final int NUMBER_OF_PROPERTIES = 23; // number of properties, this you can find if open page in postman
     private static final int OFFSET = 10; // number of files in per page
-    public static final int PAGES = 11; // for paginate
+    public static final int PAGES = 10; // for paginate
     public static final String FILENAME = "result.csv"; // name of result file
 ```
 

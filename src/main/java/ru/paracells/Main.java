@@ -13,7 +13,6 @@ import java.util.List;
 // offset=12 limit=24
 // по вкладке networks браузера, видно, что обращается к странице
 // https://gpsfront.aliexpress.com/getRecommendingResults.do?callback=jQuery183007873793326438139_1603094442582&widget_id=5547572&platform=pc&limit=12&offset=12&phase=1&productIds2Top=&postback=b632efc1-282d-4b33-8fad-659ab9bf19b8&_=1603094458486
-// ответ, который получает похож на json
 
 public class Main {
 
